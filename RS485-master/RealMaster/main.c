@@ -77,7 +77,11 @@ int main(void) {
         Master_TranscieverCommand(M_Packet, H_SendPacket);
     }
 }
-
+/*
+ * This function is designed for master to querry all the slaves with
+ * willing function, get respond from slave and then send back all data
+ * with correspond function of a slave to PC
+ */
 void Master_TranscieverCommand(struct RS485_MasterPacket M_Packet[], struct HostPacket H_SendPacket[]) {
     uint8_t count = 0;
     uint8_t addr, func;
