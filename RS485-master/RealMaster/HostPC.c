@@ -24,23 +24,17 @@ uint8_t ReceivePacket_fromPC(struct HostPacket *H_Packet, uint8_t desireAddr) {
     uint8_t CRC_HighByte, CRC_LowByte;
     uint16_t CRC_Verify;
     uint8_t packetLength;
-	uint8_t index, sync_byte;
-	
-	//ENABLE_TX;
-	//DISABLE_RX;
-	
-	//while (!(PORTD & (1 << RS485_DE)));
-	//while (!(PORTD & (1 << RS485_RE)));
+    uint8_t index, sync_byte;
 	
     sync_byte = UART_ByteReceive();
     if (sync_byte != HOST_SYNCBYTE)
         return 1;
 	
     H_Packet->SlaveAddr = UART_ByteReceive();
-	if(H_Packet->SlaveAddr != desireAddr)
-		return 2;
+    if(H_Packet->SlaveAddr != desireAddr)
+        return 2;
 	
-	H_Packet->Function = UART_ByteReceive();
+    H_Packet->Function = UART_ByteReceive();
 	
     H_Packet->Length = UART_ByteReceive();
 
@@ -56,12 +50,7 @@ uint8_t ReceivePacket_fromPC(struct HostPacket *H_Packet, uint8_t desireAddr) {
 
     if (CRC_Verify != H_Packet->CRC16)
         return 3; 
-	
-	//ENABLE_RX;
-	//DISABLE_TX;
-	
-	//while (PORTD & (1 << RS485_RE));
-	//while (PORTD & (1 << RS485_DE));
+
     return 0;	
 }
 
@@ -81,7 +70,7 @@ void SendPacket_toPC(struct HostPacket H_Packet) {
 	
     H_Packet.CRC16 = CRC16_Calculation((uint8_t *) packetPtr, packetLength);
 	
-	UART_SendByte(HOST_SYNCBYTE);
+    UART_SendByte(HOST_SYNCBYTE);
 	
     for (pos = 0; pos < 3; pos++)
         UART_SendByte(*(uint8_t *) packetPtr++);
