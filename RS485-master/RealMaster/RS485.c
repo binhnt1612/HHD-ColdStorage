@@ -23,20 +23,20 @@
 bool RS485_MasterSendPacket(struct RS485_MasterPacket M_Packet) {
     void *packetPtr = &M_Packet;
 	
-	if (RS485_BusChecking() == false)
-		return false;
+    if (RS485_BusChecking() == false)
+        return false;
 	
     M_Packet.CRC16 = CRC16_Calculation((uint8_t *) packetPtr, 2);
 	
     ENABLE_TX;
-	DISABLE_RX;
+    DISABLE_RX;
 	
     while (! (PORTD & (1 << RS485_DE)) );
-	while (! (PORTD & (1 << RS485_RE)) );
+    while (! (PORTD & (1 << RS485_RE)) );
 	
-	_delay_ms(20);
+    _delay_ms(20);
 	
-	UART_SendByte(RS485_SYNCBYTE);
+    UART_SendByte(RS485_SYNCBYTE);
 	
     for (uint8_t i = 0; i < sizeof(M_Packet); i++)	
         UART_SendByte(*(uint8_t *) packetPtr++);
@@ -44,29 +44,29 @@ bool RS485_MasterSendPacket(struct RS485_MasterPacket M_Packet) {
     while (! (UCSR0A & (1 << TXC0)) );
 	
     ENABLE_RX;
-	DISABLE_TX;
+    DISABLE_TX;
 	
     while (PORTD & (1 << RS485_DE));
-	while (PORTD & (1 << RS485_RE));
+    while (PORTD & (1 << RS485_RE));
 	
-	_delay_ms(20);
-	return true;
+    _delay_ms(20);
+    return true;
 }
 
 uint8_t RS485_SlaveReceivePacket(struct RS485_MasterPacket *M_Packet, uint8_t desireAddr) {
     uint8_t CRC_HighByte, CRC_LowByte;
     uint16_t CRC_Verify;
-	uint8_t sync_byte;
+    uint8_t sync_byte;
 	
-	 sync_byte = UART_ByteReceive();
-	 if (sync_byte != RS485_SYNCBYTE)
-		return 1;
+    sync_byte = UART_ByteReceive(); 
+    if (sync_byte != RS485_SYNCBYTE)
+        return 1;
 	
     M_Packet->SlaveAddr =  UART_ByteReceive();
     if (M_Packet->SlaveAddr != desireAddr)
         return 2;
 
-	M_Packet->Function = UART_ByteReceive();
+    M_Packet->Function = UART_ByteReceive();
 	
     CRC_LowByte = UART_ByteReceive();
     CRC_HighByte = UART_ByteReceive();
@@ -90,19 +90,19 @@ void RS485_SlaveSendPacket(struct RS485_SlavePacket S_Packet) {
     void *packetPtr = &S_Packet;
     uint8_t CRC_HighByte, CRC_LowByte;
     uint8_t packetLength = 3 + S_Packet.Length;
-	uint8_t pos;
+    uint8_t pos;
 	
     S_Packet.CRC16 = CRC16_Calculation((uint8_t *) packetPtr, packetLength);
 	
     ENABLE_TX;
-	DISABLE_RX;
+    DISABLE_RX;
 	
     while (! (PORTD & (1 << RS485_RE)) );
-	while (! (PORTD & (1 << RS485_DE)) );
+    while (! (PORTD & (1 << RS485_DE)) );
 	
-	_delay_ms(20);
+    _delay_ms(20);
 	
-	UART_SendByte(RS485_SYNCBYTE);
+    UART_SendByte(RS485_SYNCBYTE);
 	
     for (pos = 0; pos < 3; pos++)
         UART_SendByte(*(uint8_t *) packetPtr++);
@@ -118,24 +118,23 @@ void RS485_SlaveSendPacket(struct RS485_SlavePacket S_Packet) {
     while (! (UCSR0A & (1 << TXC0)) );
 	
     ENABLE_RX;
-	DISABLE_TX;
+    DISABLE_TX;
 	
     while (PORTD & (1 << RS485_DE));
-	while (PORTD & (1 << RS485_RE));
+    while (PORTD & (1 << RS485_RE));
 	
-	_delay_ms(20);
-
+    _delay_ms(20);
 }
 
 uint8_t RS485_MasterReceivePacket(struct RS485_SlavePacket *S_Packet, uint8_t desireAddr) {
     uint8_t CRC_HighByte, CRC_LowByte;
     uint16_t CRC_Verify;
     uint8_t packetLength, index;
-	uint8_t sync_byte;
+    uint8_t sync_byte;
 	
-	sync_byte = UART_ByteReceive();
-	if(sync_byte != RS485_SYNCBYTE)
-		return 1;
+    sync_byte = UART_ByteReceive();
+    if(sync_byte != RS485_SYNCBYTE)
+        return 1;
 	
     S_Packet->SlaveAddr =  UART_ByteReceive();
     if (S_Packet->SlaveAddr != desireAddr)
@@ -153,7 +152,7 @@ uint8_t RS485_MasterReceivePacket(struct RS485_SlavePacket *S_Packet, uint8_t de
 	
     S_Packet->CRC16 = (CRC_HighByte << 8) | CRC_LowByte;
     
-	packetLength = 3 + S_Packet->Length;
+    packetLength = 3 + S_Packet->Length;
     CRC_Verify = CRC16_Calculation((uint8_t *) S_Packet, packetLength);
 
     if (CRC_Verify != S_Packet->CRC16)
@@ -162,32 +161,32 @@ uint8_t RS485_MasterReceivePacket(struct RS485_SlavePacket *S_Packet, uint8_t de
 }
 
 uint16_t CRC16_Calculation(uint8_t *ptr, uint8_t length) {
-	uint16_t CRC = 0XFFFF;
+    uint16_t CRC = 0XFFFF;
 	
-	while(length--) {
-		CRC = CRC ^ (*ptr++ << 8);
+    while(length--) {
+	CRC = CRC ^ (*ptr++ << 8);
 		
-		for(uint8_t i = 0; i < 8; i++) {
-			if(CRC & 0x8000)
-				CRC = (CRC << 1) ^ 0x1021;
-			else
-				CRC = CRC << 1;
-		}
+	for(uint8_t i = 0; i < 8; i++) {
+	    if(CRC & 0x8000)
+	        CRC = (CRC << 1) ^ 0x1021;
+	    else
+	        CRC = CRC << 1;
 	}
+    }
 	
-	return  CRC;
+    return  CRC;
 }
 
 bool RS485_BusChecking(void) {
-	uint16_t count;
-	char ch;
+    uint16_t count;
+    char ch;
 	
-	for (count = 0; count < 0x01FF; count++) {
-		if (UCSR0A & (1 << RXC0))
-			ch = UDR0;
-	}
-	
+    for (count = 0; count < 0x01FF; count++) {
 	if (UCSR0A & (1 << RXC0))
-		return false;
-	return true;
+	    ch = UDR0;
+    }
+	
+    if (UCSR0A & (1 << RXC0))
+        return false;
+    return true;
 }
