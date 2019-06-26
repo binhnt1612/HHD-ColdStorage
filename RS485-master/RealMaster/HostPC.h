@@ -10,7 +10,7 @@
 #define __HOSTPC_H
 
 struct HostPacket {
-	uint8_t SlaveAddr;
+    uint8_t SlaveAddr;
     uint8_t Function;
     uint8_t Length;
     uint8_t Data[50];
