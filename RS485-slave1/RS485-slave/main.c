@@ -49,7 +49,7 @@ int main(void) {
     ENABLE_RX;
     DISABLE_TX;  
     while (PORTD & (1 << RS485_DE));
-	while (PORTD & (1 << RS485_RE));
+    while (PORTD & (1 << RS485_RE));
 	
     UART_Initialize(600);
 
@@ -82,9 +82,9 @@ int main(void) {
 	    for(int count = 0; count < S_Packet[0].Length; count++)
 	        S_Packet[0].Data[count] = temp_C[count];
 				
-		RS485_SlaveSendPacket(S_Packet[0]);
-		wdt_reset();
-		timeout_count = 0;
+	    RS485_SlaveSendPacket(S_Packet[0]);
+	    wdt_reset();
+	    timeout_count = 0;
         }
 		
         else if (M_Packet.Function == GET_LEDSTATUS) {
