@@ -104,12 +104,12 @@ void Master_TranscieverCommand(struct RS485_MasterPacket M_Packet[], struct Host
 		for (uint8_t index = 0; index < S_Packet.Length; index++) 
 		    H_SendPacket[count].Data[index] = S_Packet.Data[index];
 					
-		    if (S_Packet.Function == GET_LEDSTATUS)
-		        led[S_Packet.SlaveAddr - 2] = (S_Packet.Data[1] << 8) | S_Packet.Data[0];	
+		if (S_Packet.Function == GET_LEDSTATUS)
+		    led[S_Packet.SlaveAddr - 2] = (S_Packet.Data[1] << 8) | S_Packet.Data[0];	
 				
-		    _delay_ms(1500);
-		    wdt_reset();	
-		    timeout_count = 0;	
+		_delay_ms(1500);
+                wdt_reset();	
+		timeout_count = 0;	
             }
 			
             else {
