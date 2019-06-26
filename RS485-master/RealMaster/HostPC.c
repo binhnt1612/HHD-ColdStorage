@@ -19,7 +19,8 @@
 	-----------------------------------------------------------------------------------
 	| Sync Byte  | Slave Addr   | Function  |  DataLength  | DataPayload |     CRC    |
 */
-
+//Reserve for future use
+/*
 uint8_t ReceivePacket_fromPC(struct HostPacket *H_Packet, uint8_t desireAddr) {
     uint8_t CRC_HighByte, CRC_LowByte;
     uint16_t CRC_Verify;
@@ -53,6 +54,7 @@ uint8_t ReceivePacket_fromPC(struct HostPacket *H_Packet, uint8_t desireAddr) {
 
     return 0;	
 }
+*/
 
 /*
 	PACKET FORMAT
@@ -61,27 +63,42 @@ uint8_t ReceivePacket_fromPC(struct HostPacket *H_Packet, uint8_t desireAddr) {
 	---------------------------------------------------------------------------------
 	| Sync Byte  | Slave Addr |  Function  |  DataLength  | DataPayload |     CRC    |
 */
-
+/*
+ * This function for sending datapacket to PC
+ * ATmega328p has only one UART so RS485 must be in 
+ * received mode to send packet successfully to PC
+ * 
+ * PACKET FORMAT:
+ * ----------------------------------------------------------------------------------
+ * |   1 byte   |   1 byte   |   1 byte   |    1 byte    |    n byte   |   2 byte   |
+ * ----------------------------------------------------------------------------------
+ * | Sync Byte  | Slave Addr |  Function  |  DataLength  | DataPayload |    CRC     |
+ * ----------------------------------------------------------------------------------
+ */
 void SendPacket_toPC(struct HostPacket H_Packet) {
     void *packetPtr = &H_Packet;
     uint8_t CRC_HighByte, CRC_LowByte;
     uint8_t packetLength = 3 + H_Packet.Length;
-	uint8_t pos;
+    uint8_t pos;
 	
     H_Packet.CRC16 = CRC16_Calculation((uint8_t *) packetPtr, packetLength);
 	
     UART_SendByte(HOST_SYNCBYTE);
-	
+     
+    //Send slave address, function, datalen
     for (pos = 0; pos < 3; pos++)
         UART_SendByte(*(uint8_t *) packetPtr++);
-	
+
+    //Send datapayload according to datalen
     for (pos = 0; pos < H_Packet.Length; pos++)
         UART_SendByte(H_Packet.Data[pos]);
-	
+
+    //Send 2 byte CRC
     CRC_LowByte = H_Packet.CRC16 & 0xFF;
     CRC_HighByte = (H_Packet.CRC16 >> 8) & 0xFF;
     UART_SendByte(CRC_LowByte);
     UART_SendByte(CRC_HighByte);
 	
+    //Waiting for sending process end	
     while ( !(UCSR0A & (1 << TXC0)) );
 }
