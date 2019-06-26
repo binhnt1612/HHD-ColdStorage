@@ -10,6 +10,9 @@
 #include "config.h"
 #include "UART.h"
 
+/*
+ * Init UART of MCU, baudrate fixed at 600bps
+ */
 void UART_Initialize(uint32_t baudrate)	{
     /*
     uint16_t baudrate_calc;
@@ -24,12 +27,20 @@ void UART_Initialize(uint32_t baudrate)	{
     UCSR0C = (1 << UCSZ00) | (1 << UCSZ01);					
 }
 
+/*
+ * Sending a byte through UART
+ */
 void UART_SendByte(uint8_t data) {
-    while (! (UCSR0A & (1 << UDRE0)) );			
+   //Waiting for buffer empty
+    while (! (UCSR0A & (1 << UDRE0)) );
+    //Clear transmit flag before sending
     UCSR0A |= (1 << TXC0);
     UDR0 = data;								
 }
 
+/*
+ * Recieve a byte through UART, return 0 if timeout
+ */
 uint8_t UART_ByteReceive(void) {
     uint16_t count;
     for (count = 0; count < 0xFFFF; count++) {
