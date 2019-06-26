@@ -54,7 +54,7 @@ int main(void) {
 	
     UART_Initialize(600);
 	
-    //Set 11 led pins as input 
+    //Set 10 led pins as input 
     DDRD &= ~( (1 << DDD2) | (1 << DDD3) | (1 << DDD5) );
     DDRB &= ~(1 << DDB1);
 	
