@@ -10,7 +10,7 @@
 #define __UART_H
 
 #ifndef F_CPU
-	#define F_CPU 16000000UL
+    #define F_CPU 16000000UL
 #endif
 
 void UART_Initialize(uint32_t baudrate);
