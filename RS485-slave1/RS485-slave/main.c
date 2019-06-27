@@ -88,11 +88,12 @@ int main(void) {
 	    //Put all data from sensor to packet (datapayload)	
 	    for(int count = 0; count < S_Packet[0].Length; count++)
 	        S_Packet[0].Data[count] = temp_C[count];
-	
-	    RS485_SlaveSendPacket(S_Packet[0]);
-	    //Reset watchdog register when system works normally
-	    wdt_reset();
-	    timeout_count = 0;
+            //Reset watchdog register when system works normally
+	    if (RS485_SlaveSendPacket(S_Packet[0]) == true) {
+		//Reset watchdog register when system works normally
+	        wdt_reset();
+	        timeout_count = 0;
+	    }	   
         }
 		
         else if (M_Packet.Function == GET_LEDSTATUS) {
@@ -102,10 +103,11 @@ int main(void) {
 	    S_Packet[1].Data[0] = led & 0xFF;
 	    S_Packet[1].Data[1] = (led >> 8) & 0xFF;
 			
-            RS485_SlaveSendPacket(S_Packet[1]);	
-            //Reset watchdog register when system works normally
-	    wdt_reset();
-	    timeout_count = 0;
+            if (RS485_SlaveSendPacket(S_Packet[1]) == true)) {
+	        //Reset watchdog register when system works normally
+	        wdt_reset();
+	        timeout_count = 0;
+	    }	
         }
     }
     return 0;
