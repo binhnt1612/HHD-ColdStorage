@@ -21,6 +21,7 @@ void WDT_off(void);
 void WDT_Enable(void);
 
 volatile uint8_t timeout_count = 0;
+volatile uint8_t pulse_count = 0;
 
 //Temperature sensor covariance for calculation with range of resistor value
 const double A[] = {-4.865e-3, -6.678e-4, -6.61e-5, -7.01e-4, -4.607e-3,
@@ -71,6 +72,16 @@ int main(void) {
 	
     S_Packet[1].SlaveAddr	= SLAVE1_ADDR;
     S_Packet[1].Function	= GET_LEDSTATUS;
+
+    //Setup timer 0 for heartbeat pulse 
+    TCCR0B = (1 << CS02) | (1 << CS00);
+
+    //Setup timer 1 for heartbeat - 4sec
+    TCCR1B = (1 << CS10) | (1 << CS12);
+    TIMSK1 |= 1 << TOIE1;
+    TCNT1 = 0xBDC;
+	
+    sei();
 	
     _delay_ms(100);
 	
@@ -89,11 +100,17 @@ int main(void) {
 	    for(int count = 0; count < S_Packet[0].Length; count++)
 	        S_Packet[0].Data[count] = temp_C[count];
             //Reset watchdog register when system works normally
+		
+	    cli();  //Disable global interrupt when sending packet to avoid transmission mismatch
+		
 	    if (RS485_SlaveSendPacket(S_Packet[0]) == true) {
 		//Reset watchdog register when system works normally
 	        wdt_reset();
 	        timeout_count = 0;
 	    }	   
+		
+	    sei();  //Reenable global interrupt
+		
         }
 		
         else if (M_Packet.Function == GET_LEDSTATUS) {
@@ -256,3 +273,51 @@ ISR(WDT_vect) {
 	
     sei();
 }
+
+/* 
+ * ISR for heartbeat pulsewidth generated 
+ * Turn on after ISR1 trigger and trigger each 15ms 
+ * Turn off ISR after generate a 150ms pulsewidth
+*/
+
+ISR(TIMER0_OVF_vect) {
+    cli();
+    pulse_count++;          //Keep counting until get 150ms 
+    
+    TCNT0 = 0x15;
+	
+    if (pulse_count == 10) {
+        pulse_count = 0;
+	//Finish generate a heartbeat pulse
+	PORTB |= (1 << PORTB4);
+	DDRB &= ~(1 << DDB4);
+	//Turn off this ISR (ISR timer 0)
+	TIMSK0 &= ~(1 << TOIE0);
+    }
+	
+    sei();	
+}
+
+/* 
+ * ISR for heartbeat trigger and trigger each 4second
+ * when system power on
+*/urn on after ISR1 trigger and trigger each 15ms 
+298
+ * Turn off ISR after generate a 150ms pulsewidth
+
+ISR(TIMER1_OVF_vect) {
+    cli();
+    //Initial value for timer0,1
+    TCNT0 = 0x15;
+    TCNT1 = 0xBDC;
+	
+    //Enable interrupt for pulsewidth (ISR timer0)
+    TIMSK0 |= 1 << TOIE0;
+	
+    //Start generating heartbeat pulse
+    DDRB |= (1 << DDB4);
+    PORTB &= ~(1 << PORTB4);
+	
+    sei();
+}
+
